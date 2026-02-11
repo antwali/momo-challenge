@@ -47,4 +47,55 @@ describe("history getTransactionHistory", () => {
       amount: -100,
     });
   });
+
+  it("builds where with fromDate and toDate when provided", async () => {
+    mockAccountFindFirst.mockResolvedValue({ id: "acc-1", userId: "user-1" });
+    mockJournalEntryFindMany.mockResolvedValue([]);
+    await getTransactionHistory({
+      accountId: "acc-1",
+      userId: "user-1",
+      fromDate: "2025-01-01",
+      toDate: "2025-01-31",
+    });
+    expect(mockJournalEntryFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          accountId: "acc-1",
+          createdAt: { gte: new Date("2025-01-01"), lte: new Date("2025-01-31") },
+        }),
+      })
+    );
+  });
+
+  it("builds where with transaction type when provided", async () => {
+    mockAccountFindFirst.mockResolvedValue({ id: "acc-1", userId: "user-1" });
+    mockJournalEntryFindMany.mockResolvedValue([]);
+    await getTransactionHistory({
+      accountId: "acc-1",
+      userId: "user-1",
+      type: "P2P",
+    });
+    expect(mockJournalEntryFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          accountId: "acc-1",
+          transaction: { type: "P2P" },
+        }),
+      })
+    );
+  });
+
+  it("respects limit and offset", async () => {
+    mockAccountFindFirst.mockResolvedValue({ id: "acc-1", userId: "user-1" });
+    mockJournalEntryFindMany.mockResolvedValue([]);
+    await getTransactionHistory({
+      accountId: "acc-1",
+      userId: "user-1",
+      limit: 10,
+      offset: 5,
+    });
+    expect(mockJournalEntryFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({ take: 10, skip: 5 })
+    );
+  });
 });
