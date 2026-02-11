@@ -4,7 +4,7 @@ MTN MoMo–style digital wallet **backend only**: database, REST APIs, double-en
 
 ## Swagger Docs:
 
-![alt text](image.png)
+![Swagger UI](docs/swagger-ui.png)
 
 ## Tech stack
 
