@@ -137,7 +137,3 @@ Currently a **mock**: logs to console. Replace `src/services/notification.ts` wi
 - `npm run db:seed` – seed categories and sample agent
 - `npm run db:studio` – open Prisma Studio
 
-## Next steps (for full scope)
-
-- JWT or API-key auth instead of `X-User-Id`.
-- Expand test coverage (e.g. ledger unit tests with mocked Prisma).
