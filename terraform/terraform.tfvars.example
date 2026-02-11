@@ -1,0 +1,8 @@
+# Copy to terraform.tfvars and adjust (terraform.tfvars is gitignored).
+
+# postgres_image = "postgres:16-alpine"
+# port            = 5432
+# postgres_user   = "momo"
+# postgres_password = "momo"
+# db_name_dev     = "momo_wallet"
+# db_name_test    = "momo_wallet_test"

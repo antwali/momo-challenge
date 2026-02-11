@@ -2,6 +2,18 @@ node_modules/
 dist/
 .env
 .env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
 *.log
 coverage/
 .DS_Store
+
+# Terraform
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/*.tfvars
+!terraform/*.tfvars.example
