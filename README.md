@@ -77,18 +77,18 @@ curl -H "X-User-Id: <user-id-from-register>" http://localhost:3000/v1/accounts
 
 ## API summary
 
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/v1/auth/register` | Register user + create main account |
-| GET | `/v1/accounts` | List my accounts (pockets) with balances |
-| POST | `/v1/accounts/pockets` | Create savings/school_fees pocket |
-| GET | `/v1/accounts/:accountId/balance` | Balance for one account |
-| POST | `/v1/transactions/cash-in` | Agent credits user (body: agentCode, userPhoneNumber, amount) |
-| POST | `/v1/transactions/p2p` | Transfer to another user by phone (body: toPhoneNumber, amount) |
-| POST | `/v1/transactions/pocket-transfer` | Move between my pockets (fromAccountId, toAccountId, amount) |
-| POST | `/v1/transactions/merchant` | Pay merchant (merchantAccountId, amount) |
-| GET | `/v1/transactions/history` | Statement (query: accountId, fromDate, toDate, type, limit, offset) |
-| POST | `/v1/merchants/onboard` | Create merchant (phoneNumber, businessName, categoryCode e.g. GROCERIES) |
+| Method | Path                               | Description                                                              |
+| ------ | ---------------------------------- | ------------------------------------------------------------------------ |
+| POST   | `/v1/auth/register`                | Register user + create main account                                      |
+| GET    | `/v1/accounts`                     | List my accounts (pockets) with balances                                 |
+| POST   | `/v1/accounts/pockets`             | Create savings/school_fees pocket                                        |
+| GET    | `/v1/accounts/:accountId/balance`  | Balance for one account                                                  |
+| POST   | `/v1/transactions/cash-in`         | Agent credits user (body: agentCode, userPhoneNumber, amount)            |
+| POST   | `/v1/transactions/p2p`             | Transfer to another user by phone (body: toPhoneNumber, amount)          |
+| POST   | `/v1/transactions/pocket-transfer` | Move between my pockets (fromAccountId, toAccountId, amount)             |
+| POST   | `/v1/transactions/merchant`        | Pay merchant (merchantAccountId, amount)                                 |
+| GET    | `/v1/transactions/history`         | Statement (query: accountId, fromDate, toDate, type, limit, offset)      |
+| POST   | `/v1/merchants/onboard`            | Create merchant (phoneNumber, businessName, categoryCode e.g. GROCERIES) |
 
 Optional `idempotencyKey` (UUID) in request body for cash-in, p2p, pocket-transfer, and merchant pay to avoid double-processing.
 
@@ -136,4 +136,3 @@ Currently a **mock**: logs to console. Replace `src/services/notification.ts` wi
 - `npm run db:migrate` – create and run migrations
 - `npm run db:seed` – seed categories and sample agent
 - `npm run db:studio` – open Prisma Studio
-
