@@ -1,0 +1,128 @@
+// Momo-style digital wallet — double-entry ledger, ACID, analytics-ready
+// https://www.prisma.io/docs
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- Users (customers) ---
+// phone_number is the unique identifier (standard in mobile money; indexed for O(1) lookup at scale)
+model User {
+  id           String    @id @default(uuid())
+  phoneNumber  String    @unique @map("phone_number") // E.164 recommended
+  fullName     String    @map("full_name")
+  gender       String?   // M/F/O for analytics
+  dateOfBirth  DateTime? @map("date_of_birth") @db.Date
+  kycStatus    String    @default("PENDING") @map("kyc_status") // PENDING, VERIFIED
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  accounts Account[]
+
+  @@index([phoneNumber])
+  @@map("users")
+}
+
+// --- Accounts (wallets / pockets) ---
+// Main + secondary pockets (savings, school_fees, etc.)
+model Account {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  type      String   // MAIN, SAVINGS, SCHOOL_FEES, MERCHANT
+  currency  String   @default("RWF")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  journalEntries   JournalEntry[]
+  merchantProfile  MerchantProfile?
+
+  @@unique([userId, type])
+  @@index([userId])
+  @@index([userId, type])
+  @@map("accounts")
+}
+
+// --- Agents (cash-in points) ---
+// No full agent management; just need to reference valid agents for cash-in
+model Agent {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  name      String
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([code])
+  @@map("agents")
+}
+
+// --- Merchants (payees with category for spending analytics) ---
+model MerchantCategory {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String   // Groceries, Fuel, Clothes, Utilities, etc.
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  merchants MerchantProfile[]
+
+  @@map("merchant_categories")
+}
+
+model MerchantProfile {
+  id         String   @id @default(uuid())
+  accountId  String   @unique @map("account_id")
+  categoryId String   @map("category_id")
+  businessName String @map("business_name")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  account  Account           @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  category MerchantCategory  @relation(fields: [categoryId], references: [id])
+
+  @@map("merchant_profiles")
+}
+
+// --- Transactions (audit header; every money move has one) ---
+model Transaction {
+  id              String   @id @default(uuid())
+  externalRef     String?  @unique @map("external_ref") // idempotency / external reference
+  type            String   // CASH_IN, P2P, POCKET_TRANSFER, MERCHANT_PAY
+  status          String   @default("PENDING") // PENDING, COMPLETED, FAILED, REVERSED
+  metadata        Json?    // e.g. agent_id, category, for analytics
+  createdAt       DateTime @default(now()) @map("created_at")
+  completedAt     DateTime? @map("completed_at")
+
+  journalEntries JournalEntry[]
+
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
+  @@index([externalRef])
+  @@map("transactions")
+}
+
+// --- Double-entry ledger: every transaction = sum of entries = 0 ---
+// Debit = negative amount, Credit = positive amount
+model JournalEntry {
+  id            String   @id @default(uuid())
+  transactionId String   @map("transaction_id")
+  accountId     String   @map("account_id")
+  amount        Decimal  @db.Decimal(18, 2) // positive = credit, negative = debit
+  currency      String   @default("RWF")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  account     Account     @relation(fields: [accountId], references: [id], onDelete: Restrict)
+
+  @@index([accountId])
+  @@index([accountId, createdAt]) // statement / history by account and time
+  @@index([transactionId])
+  @@map("journal_entries")
+}
