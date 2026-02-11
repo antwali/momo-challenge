@@ -2,6 +2,10 @@
 
 MTN MoMo–style digital wallet **backend only**: database, REST APIs, double-entry ledger. Built for one dev environment and local run.
 
+## Swagger Docs:
+
+![alt text](image.png)
+
 ## Tech stack
 
 - **Runtime:** Node 18+
@@ -16,6 +20,16 @@ MTN MoMo–style digital wallet **backend only**: database, REST APIs, double-en
 - **ACID:** Money moves are wrapped in DB transactions; if the process or DB fails mid-transfer, the whole operation rolls back (no “deducted but not credited”).
 - **Auditability:** We don’t just update a balance; every movement is a journal entry. Sum of entries per account = balance. Sum of entries per transaction = 0.
 - **Scale:** Indexes on `phone_number`, `(account_id, created_at)`, and `external_ref` keep lookups and statement queries fast at high volume.
+
+## Environments
+
+- **Development** – Default. Uses `.env` or `.env.development` (optional override).
+  - `cp .env.example .env` (or copy to `.env.development`).
+  - Run with `npm run dev`; `NODE_ENV` defaults to `development` if unset.
+- **Test** – Used by Jest. Uses `.env` then `.env.test` (later overrides).
+  - `cp .env.test.example .env.test` and point `DATABASE_URL` to a test DB (e.g. `momo_wallet_test`).
+  - Run tests with `npm test`; Jest sets `NODE_ENV=test` and config loads `.env.test`.
+  - Use a separate test database so integration tests don’t affect dev data.
 
 ## Run locally
 
@@ -32,17 +46,34 @@ cd momo-challenge
 npm install
 ```
 
-### 3. Database (Docker)
+### 3. Database
+
+**Option A – Terraform (recommended: provisions dev + test DBs in one container)**
+
+```bash
+cd terraform
+terraform init
+terraform apply -auto-approve
+cd ..
+```
+
+Then copy env files and run migrations (see below). Terraform creates both `momo_wallet` and `momo_wallet_test` via an init script.
+
+**Option B – Docker Compose (dev DB only)**
 
 ```bash
 docker compose up -d
 ```
 
-Then:
+Create the test DB manually if you run integration tests:  
+`docker exec -it momo-postgres psql -U momo -d momo_wallet -c "CREATE DATABASE momo_wallet_test;"`
+
+**Then (for either option):**
 
 ```bash
 cp .env.example .env
-# Edit .env if needed (default: postgresql://momo:momo@localhost:5432/momo_wallet)
+cp .env.test.example .env.test
+# Edit if needed (default: localhost:5432, momo/momo)
 npm run db:generate
 npm run db:push
 npm run db:seed
@@ -117,12 +148,24 @@ Currently a **mock**: logs to console. Replace `src/services/notification.ts` wi
 - Run only unit tests: `npm run test:unit`.
 - Run only integration tests: `npm run test:integration` (requires `DATABASE_URL`).
 - Without a database, integration suites are skipped; only unit tests run.
-- With `DATABASE_URL` set (e.g. from `.env` after `cp .env.example .env` and DB running), full integration tests run: register, cash-in, P2P, pockets, history.
+- With `DATABASE_URL` set (e.g. in `.env.test` after `cp .env.test.example .env.test` and a test DB), full integration tests run: register, cash-in, P2P, pockets, history.
 
 ## API documentation (OpenAPI / Swagger)
 
 - **Spec:** `docs/openapi.yaml` (OpenAPI 3.0).
 - **Swagger UI:** when the API is running, open `http://localhost:3000/api-docs` to explore and try endpoints.
+
+![Swagger UI](docs/swagger-ui.png)
+
+## Terraform
+
+PostgreSQL for **dev + test** is defined under `terraform/` (Docker provider). One container exposes both databases (`momo_wallet`, `momo_wallet_test`).
+
+- **Docker must be running** (e.g. start Docker Desktop) before `terraform apply`.
+- From repo root: `cd terraform` then `terraform init` (once), then `terraform apply -auto-approve`.
+- `terraform plan` / `terraform apply` – create/update container and volume
+- `terraform destroy` – remove container and volume (data is lost)
+- Optional: copy `terraform/terraform.tfvars.example` to `terraform/terraform.tfvars` to override port, image, or DB names.
 
 ## Scripts
 
