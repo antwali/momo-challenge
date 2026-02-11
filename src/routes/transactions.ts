@@ -1,10 +1,10 @@
-import { Router } from "express";
-import { z } from "zod";
-import { validateBody, getCurrentUserId } from "../middleware/validate";
-import { cashIn } from "../services/cashIn";
-import { p2pTransfer, pocketTransfer } from "../services/transfer";
-import { merchantPay } from "../services/merchant";
-import { getTransactionHistory } from "../services/history";
+import { Router } from 'express';
+import { z } from 'zod';
+import { validateBody, getCurrentUserId } from '../middleware/validate';
+import { cashIn } from '../services/cashIn';
+import { p2pTransfer, pocketTransfer } from '../services/transfer';
+import { merchantPay } from '../services/merchant';
+import { getTransactionHistory } from '../services/history';
 
 const router = Router();
 
@@ -17,7 +17,7 @@ const cashInSchema = z.object({
   idempotencyKey: idempotencyKey(),
 });
 
-router.post("/cash-in", validateBody(cashInSchema), async (req, res, next) => {
+router.post('/cash-in', validateBody(cashInSchema), async (req, res, next) => {
   try {
     const result = await cashIn(req.body);
     res.status(201).json(result);
@@ -32,11 +32,11 @@ const p2pSchema = z.object({
   idempotencyKey: idempotencyKey(),
 });
 
-router.post("/p2p", async (req, res, next) => {
+router.post('/p2p', async (req, res, next) => {
   try {
     const userId = getCurrentUserId(req);
     if (!userId) {
-      return res.status(401).json({ error: "X-User-Id header required" });
+      return res.status(401).json({ error: 'X-User-Id header required' });
     }
     const body = p2pSchema.parse(req.body);
     const result = await p2pTransfer({ ...body, fromUserId: userId });
@@ -53,11 +53,11 @@ const pocketTransferSchema = z.object({
   idempotencyKey: idempotencyKey(),
 });
 
-router.post("/pocket-transfer", async (req, res, next) => {
+router.post('/pocket-transfer', async (req, res, next) => {
   try {
     const userId = getCurrentUserId(req);
     if (!userId) {
-      return res.status(401).json({ error: "X-User-Id header required" });
+      return res.status(401).json({ error: 'X-User-Id header required' });
     }
     const body = pocketTransferSchema.parse(req.body);
     const result = await pocketTransfer({
@@ -76,11 +76,11 @@ const merchantPaySchema = z.object({
   idempotencyKey: idempotencyKey(),
 });
 
-router.post("/merchant", async (req, res, next) => {
+router.post('/merchant', async (req, res, next) => {
   try {
     const userId = getCurrentUserId(req);
     if (!userId) {
-      return res.status(401).json({ error: "X-User-Id header required" });
+      return res.status(401).json({ error: 'X-User-Id header required' });
     }
     const body = merchantPaySchema.parse(req.body);
     const result = await merchantPay({ ...body, fromUserId: userId });
@@ -99,11 +99,11 @@ const historyQuerySchema = z.object({
   offset: z.coerce.number().min(0).optional(),
 });
 
-router.get("/history", async (req, res, next) => {
+router.get('/history', async (req, res, next) => {
   try {
     const userId = getCurrentUserId(req);
     if (!userId) {
-      return res.status(401).json({ error: "X-User-Id header required" });
+      return res.status(401).json({ error: 'X-User-Id header required' });
     }
     const q = historyQuerySchema.parse(req.query);
     const result = await getTransactionHistory({

@@ -1,10 +1,10 @@
-import { Decimal } from "decimal.js";
-import { prisma } from "../db";
+import { Decimal } from 'decimal.js';
+import { prisma } from '../db';
 
 /** Type of the client passed into prisma.$transaction(callback) */
 type TransactionClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 
-const CURRENCY = "RWF";
+const CURRENCY = 'RWF';
 
 export type LedgerEntry = {
   accountId: string;
@@ -41,14 +41,14 @@ export async function applyEntries(
   const { type, entries, externalRef, metadata } = params;
   const sum = entries.reduce((acc, e) => acc + e.amount, 0);
   if (Math.abs(sum) > 1e-9) {
-    throw new Error("Ledger entries must sum to zero (double-entry).");
+    throw new Error('Ledger entries must sum to zero (double-entry).');
   }
 
   const transaction = await tx.transaction.create({
     data: {
       externalRef: externalRef ?? undefined,
       type,
-      status: "COMPLETED",
+      status: 'COMPLETED',
       metadata: metadata ? JSON.parse(JSON.stringify(metadata)) : undefined,
       completedAt: new Date(),
     },

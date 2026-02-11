@@ -1,10 +1,10 @@
-import { prisma } from "../db";
-import { getBalance } from "./ledger";
+import { prisma } from '../db';
+import { getBalance } from './ledger';
 
-const MAIN = "MAIN";
-const SAVINGS = "SAVINGS";
-const SCHOOL_FEES = "SCHOOL_FEES";
-const MERCHANT = "MERCHANT";
+const MAIN = 'MAIN';
+const SAVINGS = 'SAVINGS';
+const SCHOOL_FEES = 'SCHOOL_FEES';
+const MERCHANT = 'MERCHANT';
 
 export const accountTypes = [MAIN, SAVINGS, SCHOOL_FEES, MERCHANT] as const;
 
@@ -17,7 +17,7 @@ export async function getOrCreateMainAccount(userId: string) {
   });
   if (!account) {
     account = await prisma.account.create({
-      data: { userId, type: MAIN, currency: "RWF" },
+      data: { userId, type: MAIN, currency: 'RWF' },
     });
   }
   return account;
@@ -29,7 +29,7 @@ export async function getOrCreateMainAccount(userId: string) {
 export async function listAccountsWithBalances(userId: string) {
   const accounts = await prisma.account.findMany({
     where: { userId },
-    orderBy: { type: "asc" },
+    orderBy: { type: 'asc' },
   });
   const withBalances = await Promise.all(
     accounts.map(async (a) => ({
@@ -43,7 +43,7 @@ export async function listAccountsWithBalances(userId: string) {
 /**
  * Create a secondary pocket (e.g. SAVINGS, SCHOOL_FEES) for a user.
  */
-export async function createPocket(userId: string, type: "SAVINGS" | "SCHOOL_FEES") {
+export async function createPocket(userId: string, type: 'SAVINGS' | 'SCHOOL_FEES') {
   const existing = await prisma.account.findFirst({
     where: { userId, type },
   });
@@ -51,6 +51,6 @@ export async function createPocket(userId: string, type: "SAVINGS" | "SCHOOL_FEE
     throw new Error(`Pocket type ${type} already exists for this user.`);
   }
   return prisma.account.create({
-    data: { userId, type, currency: "RWF" },
+    data: { userId, type, currency: 'RWF' },
   });
 }

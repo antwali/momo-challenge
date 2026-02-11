@@ -1,7 +1,7 @@
-import { prisma } from "../db";
-import { getBalance, applyEntries } from "./ledger";
-import { getOrCreateMainAccount } from "./accounts";
-import { sendNotification } from "./notification";
+import { prisma } from '../db';
+import { getBalance, applyEntries } from './ledger';
+import { getOrCreateMainAccount } from './accounts';
+import { sendNotification } from './notification';
 
 export type CashInInput = {
   agentCode: string;
@@ -16,41 +16,38 @@ export type CashInInput = {
  */
 export async function cashIn(input: CashInInput) {
   if (input.amount <= 0) {
-    throw new Error("Amount must be positive.");
+    throw new Error('Amount must be positive.');
   }
 
   const agent = await prisma.agent.findUnique({
-    where: { code: input.agentCode, status: "ACTIVE" },
+    where: { code: input.agentCode, status: 'ACTIVE' },
   });
   if (!agent) {
-    throw new Error("Invalid or inactive agent.");
+    throw new Error('Invalid or inactive agent.');
   }
 
   const user = await prisma.user.findUnique({
-    where: { phoneNumber: input.userPhoneNumber.replace(/\s+/g, "").trim() },
+    where: { phoneNumber: input.userPhoneNumber.replace(/\s+/g, '').trim() },
   });
   if (!user) {
-    throw new Error("User not found.");
+    throw new Error('User not found.');
   }
 
   const account = await getOrCreateMainAccount(user.id);
 
   const result = await prisma.$transaction(async (tx) => {
-    return applyEntries(
-      tx as Parameters<typeof applyEntries>[0],
-      {
-        type: "CASH_IN",
-        externalRef: input.idempotencyKey,
-        metadata: { agentId: agent.id, agentCode: agent.code },
-        entries: [{ accountId: account.id, amount: input.amount }],
-      }
-    );
+    return applyEntries(tx as Parameters<typeof applyEntries>[0], {
+      type: 'CASH_IN',
+      externalRef: input.idempotencyKey,
+      metadata: { agentId: agent.id, agentCode: agent.code },
+      entries: [{ accountId: account.id, amount: input.amount }],
+    });
   });
 
   const newBalance = await getBalance(account.id);
 
   await sendNotification({
-    channel: "sms",
+    channel: 'sms',
     to: user.phoneNumber,
     message: `You received ${input.amount} RWF. New balance: ${newBalance.toFixed(2)} RWF.`,
   }).catch(() => {});

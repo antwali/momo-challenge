@@ -1,6 +1,6 @@
-import { prisma } from "../db";
-import { getOrCreateMainAccount } from "./accounts";
-import { sendNotification } from "./notification";
+import { prisma } from '../db';
+import { getOrCreateMainAccount } from './accounts';
+import { sendNotification } from './notification';
 
 export type RegisterInput = {
   phoneNumber: string;
@@ -14,12 +14,12 @@ export type RegisterInput = {
  * Phone number is unique identifier; indexed for fast lookup at scale.
  */
 export async function register(input: RegisterInput) {
-  const normalizedPhone = input.phoneNumber.replace(/\s+/g, "").trim();
+  const normalizedPhone = input.phoneNumber.replace(/\s+/g, '').trim();
   const existing = await prisma.user.findUnique({
     where: { phoneNumber: normalizedPhone },
   });
   if (existing) {
-    throw new Error("User with this phone number already exists.");
+    throw new Error('User with this phone number already exists.');
   }
 
   const user = await prisma.user.create({
@@ -28,14 +28,14 @@ export async function register(input: RegisterInput) {
       fullName: input.fullName,
       gender: input.gender ?? null,
       dateOfBirth: input.dateOfBirth ? new Date(input.dateOfBirth) : null,
-      kycStatus: "PENDING",
+      kycStatus: 'PENDING',
     },
   });
 
   const account = await getOrCreateMainAccount(user.id);
 
   await sendNotification({
-    channel: "sms",
+    channel: 'sms',
     to: normalizedPhone,
     message: `Welcome to Momo Wallet. Your account is ready.`,
   }).catch(() => {});

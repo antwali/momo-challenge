@@ -1,7 +1,7 @@
-import { config } from "../config";
+import { config } from '../config';
 
 export type NotificationPayload = {
-  channel: "sms" | "whatsapp" | "push";
+  channel: 'sms' | 'whatsapp' | 'push';
   to: string;
   message: string;
   subject?: string;
@@ -12,8 +12,8 @@ export type NotificationPayload = {
  * Replace with real SMS/WhatsApp integration in production.
  */
 export async function sendNotification(payload: NotificationPayload): Promise<void> {
-  if (config.notificationChannel === "console") {
-    console.log("[Notification]", payload.channel, "->", payload.to, payload.message);
+  if (config.notificationChannel === 'console') {
+    console.log('[Notification]', payload.channel, '->', payload.to, payload.message);
     return;
   }
   // Future: call Twilio, WhatsApp Business API, etc.
