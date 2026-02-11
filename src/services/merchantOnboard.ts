@@ -1,4 +1,4 @@
-import { prisma } from "../db";
+import { prisma } from '../db';
 
 export type OnboardMerchantInput = {
   phoneNumber: string;
@@ -18,13 +18,13 @@ export async function onboardMerchant(input: OnboardMerchantInput) {
     throw new Error(`Category ${input.categoryCode} not found. Run db:seed.`);
   }
 
-  const phone = input.phoneNumber.replace(/\s+/g, "").trim();
+  const phone = input.phoneNumber.replace(/\s+/g, '').trim();
   const existing = await prisma.user.findUnique({
     where: { phoneNumber: phone },
-    include: { accounts: { where: { type: "MERCHANT" } } },
+    include: { accounts: { where: { type: 'MERCHANT' } } },
   });
   if (existing?.accounts?.length) {
-    throw new Error("User already has a merchant account.");
+    throw new Error('User already has a merchant account.');
   }
 
   const user = await prisma.user.upsert({
@@ -32,13 +32,13 @@ export async function onboardMerchant(input: OnboardMerchantInput) {
     create: {
       phoneNumber: phone,
       fullName: input.businessName,
-      kycStatus: "PENDING",
+      kycStatus: 'PENDING',
     },
     update: {},
   });
 
   const account = await prisma.account.create({
-    data: { userId: user.id, type: "MERCHANT", currency: "RWF" },
+    data: { userId: user.id, type: 'MERCHANT', currency: 'RWF' },
   });
 
   const profile = await prisma.merchantProfile.create({

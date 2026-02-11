@@ -1,7 +1,7 @@
-import { prisma } from "../db";
-import { getBalance, applyEntries } from "./ledger";
-import { getOrCreateMainAccount } from "./accounts";
-import { sendNotification } from "./notification";
+import { prisma } from '../db';
+import { getBalance, applyEntries } from './ledger';
+import { getOrCreateMainAccount } from './accounts';
+import { sendNotification } from './notification';
 
 export type P2PInput = {
   fromUserId: string;
@@ -16,17 +16,17 @@ export type P2PInput = {
  */
 export async function p2pTransfer(input: P2PInput) {
   if (input.amount <= 0) {
-    throw new Error("Amount must be positive.");
+    throw new Error('Amount must be positive.');
   }
 
   const toUser = await prisma.user.findUnique({
-    where: { phoneNumber: input.toPhoneNumber.replace(/\s+/g, "").trim() },
+    where: { phoneNumber: input.toPhoneNumber.replace(/\s+/g, '').trim() },
   });
   if (!toUser) {
-    throw new Error("Recipient not found.");
+    throw new Error('Recipient not found.');
   }
   if (toUser.id === input.fromUserId) {
-    throw new Error("Cannot transfer to yourself.");
+    throw new Error('Cannot transfer to yourself.');
   }
 
   const senderAccount = await getOrCreateMainAccount(input.fromUserId);
@@ -35,20 +35,17 @@ export async function p2pTransfer(input: P2PInput) {
   const result = await prisma.$transaction(async (tx) => {
     const balance = await getBalance(senderAccount.id);
     if (balance.lt(input.amount)) {
-      throw new Error("Insufficient balance.");
+      throw new Error('Insufficient balance.');
     }
-    return applyEntries(
-      tx as Parameters<typeof applyEntries>[0],
-      {
-        type: "P2P",
-        externalRef: input.idempotencyKey,
-        metadata: {},
-        entries: [
-          { accountId: senderAccount.id, amount: -input.amount },
-          { accountId: receiverAccount.id, amount: input.amount },
-        ],
-      }
-    );
+    return applyEntries(tx as Parameters<typeof applyEntries>[0], {
+      type: 'P2P',
+      externalRef: input.idempotencyKey,
+      metadata: {},
+      entries: [
+        { accountId: senderAccount.id, amount: -input.amount },
+        { accountId: receiverAccount.id, amount: input.amount },
+      ],
+    });
   });
 
   const [sender, receiver] = await Promise.all([
@@ -57,9 +54,9 @@ export async function p2pTransfer(input: P2PInput) {
   ]);
 
   await sendNotification({
-    channel: "sms",
+    channel: 'sms',
     to: toUser.phoneNumber,
-    message: `You received ${input.amount} RWF from ${sender?.fullName ?? "a user"}.`,
+    message: `You received ${input.amount} RWF from ${sender?.fullName ?? 'a user'}.`,
   }).catch(() => {});
 
   return {
@@ -85,7 +82,7 @@ export type PocketTransferInput = {
  */
 export async function pocketTransfer(input: PocketTransferInput) {
   if (input.amount <= 0) {
-    throw new Error("Amount must be positive.");
+    throw new Error('Amount must be positive.');
   }
 
   const [fromAcc, toAcc] = await Promise.all([
@@ -98,29 +95,26 @@ export async function pocketTransfer(input: PocketTransferInput) {
   ]);
 
   if (!fromAcc || !toAcc) {
-    throw new Error("One or both accounts not found or do not belong to you.");
+    throw new Error('One or both accounts not found or do not belong to you.');
   }
   if (fromAcc.id === toAcc.id) {
-    throw new Error("Source and destination must be different.");
+    throw new Error('Source and destination must be different.');
   }
 
   const result = await prisma.$transaction(async (tx) => {
     const balance = await getBalance(fromAcc.id);
     if (balance.lt(input.amount)) {
-      throw new Error("Insufficient balance.");
+      throw new Error('Insufficient balance.');
     }
-    return applyEntries(
-      tx as Parameters<typeof applyEntries>[0],
-      {
-        type: "POCKET_TRANSFER",
-        externalRef: input.idempotencyKey,
-        metadata: { fromType: fromAcc.type, toType: toAcc.type },
-        entries: [
-          { accountId: fromAcc.id, amount: -input.amount },
-          { accountId: toAcc.id, amount: input.amount },
-        ],
-      }
-    );
+    return applyEntries(tx as Parameters<typeof applyEntries>[0], {
+      type: 'POCKET_TRANSFER',
+      externalRef: input.idempotencyKey,
+      metadata: { fromType: fromAcc.type, toType: toAcc.type },
+      entries: [
+        { accountId: fromAcc.id, amount: -input.amount },
+        { accountId: toAcc.id, amount: input.amount },
+      ],
+    });
   });
 
   return {

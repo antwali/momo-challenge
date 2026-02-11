@@ -43,10 +43,10 @@ paths:
               type: object
               required: [phoneNumber, fullName]
               properties:
-                phoneNumber: { type: string, minLength: 9, example: "250788123456" }
-                fullName: { type: string, maxLength: 200, example: "Alice Uwera" }
+                phoneNumber: { type: string, minLength: 9, example: '250788123456' }
+                fullName: { type: string, maxLength: 200, example: 'Alice Uwera' }
                 gender: { type: string, enum: [M, F, O] }
-                dateOfBirth: { type: string, format: date, example: "1990-01-15" }
+                dateOfBirth: { type: string, format: date, example: '1990-01-15' }
       responses:
         '201':
           description: User and main account created
@@ -177,10 +177,11 @@ paths:
               type: object
               required: [agentCode, userPhoneNumber, amount]
               properties:
-                agentCode: { type: string, example: "AGENT001" }
-                userPhoneNumber: { type: string, example: "250788123456" }
+                agentCode: { type: string, example: 'AGENT001' }
+                userPhoneNumber: { type: string, example: '250788123456' }
                 amount: { type: number, minimum: 0.01 }
-                idempotencyKey: { type: string, format: uuid, description: "Optional idempotency key" }
+                idempotencyKey:
+                  { type: string, format: uuid, description: 'Optional idempotency key' }
       responses:
         '201':
           description: Cash-in completed
@@ -372,9 +373,9 @@ paths:
               type: object
               required: [phoneNumber, businessName, categoryCode]
               properties:
-                phoneNumber: { type: string, example: "250788999000" }
-                businessName: { type: string, example: "Mumo Store" }
-                categoryCode: { type: string, example: "GROCERIES" }
+                phoneNumber: { type: string, example: '250788999000' }
+                businessName: { type: string, example: 'Mumo Store' }
+                categoryCode: { type: string, example: 'GROCERIES' }
       responses:
         '201':
           description: Merchant onboarded

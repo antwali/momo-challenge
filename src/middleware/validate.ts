@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from "express";
-import { ZodSchema, ZodError } from "zod";
+import { Request, Response, NextFunction } from 'express';
+import { ZodSchema, ZodError } from 'zod';
 
 export function validateBody<T>(schema: ZodSchema<T>) {
   return (req: Request, _res: Response, next: NextFunction) => {
@@ -10,7 +10,7 @@ export function validateBody<T>(schema: ZodSchema<T>) {
       if (e instanceof ZodError) {
         next({
           statusCode: 400,
-          message: "Validation failed",
+          message: 'Validation failed',
           details: e.flatten().fieldErrors,
         });
         return;
@@ -21,5 +21,5 @@ export function validateBody<T>(schema: ZodSchema<T>) {
 }
 
 export function getCurrentUserId(req: Request): string | null {
-  return (req.headers["x-user-id"] as string) ?? null;
+  return (req.headers['x-user-id'] as string) ?? null;
 }

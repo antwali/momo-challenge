@@ -1,4 +1,4 @@
-import { prisma } from "../db";
+import { prisma } from '../db';
 
 export type HistoryFilters = {
   accountId: string;
@@ -19,7 +19,7 @@ export async function getTransactionHistory(filters: HistoryFilters) {
     where: { id: filters.accountId, userId: filters.userId },
   });
   if (!account) {
-    throw new Error("Account not found.");
+    throw new Error('Account not found.');
   }
 
   const from = filters.fromDate ? new Date(filters.fromDate) : undefined;
@@ -43,18 +43,30 @@ export async function getTransactionHistory(filters: HistoryFilters) {
 
   const entries = await prisma.journalEntry.findMany({
     where,
-    orderBy: { createdAt: "desc" },
+    orderBy: { createdAt: 'desc' },
     take: limit,
     skip: offset,
     include: {
       transaction: true,
-      account: { select: { id: true, type: true, user: { select: { fullName: true, phoneNumber: true } } } },
+      account: {
+        select: {
+          id: true,
+          type: true,
+          user: { select: { fullName: true, phoneNumber: true } },
+        },
+      },
     },
   });
 
-  const byTransaction = new Map<string, { transaction: typeof entries[0]["transaction"]; entries: typeof entries }>();
+  const byTransaction = new Map<
+    string,
+    { transaction: (typeof entries)[0]['transaction']; entries: typeof entries }
+  >();
   for (const e of entries) {
-    const list = byTransaction.get(e.transactionId) ?? { transaction: e.transaction, entries: [] };
+    const list = byTransaction.get(e.transactionId) ?? {
+      transaction: e.transaction,
+      entries: [],
+    };
     list.entries.push(e);
     byTransaction.set(e.transactionId, list);
   }
