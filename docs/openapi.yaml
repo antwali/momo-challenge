@@ -1,0 +1,393 @@
+openapi: 3.0.3
+info:
+  title: Momo Wallet API
+  description: MTN MoMo-style digital wallet backend. User registration, cash-in via agents, P2P and merchant transfers, pockets (savings), and transaction history.
+  version: 0.1.0
+
+servers:
+  - url: http://localhost:3000
+    description: Local development
+
+tags:
+  - name: Health
+  - name: Auth
+  - name: Accounts
+  - name: Transactions
+  - name: Merchants
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+                  timestamp: { type: string, format: date-time }
+
+  /v1/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register user and create main account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phoneNumber, fullName]
+              properties:
+                phoneNumber: { type: string, minLength: 9, example: "250788123456" }
+                fullName: { type: string, maxLength: 200, example: "Alice Uwera" }
+                gender: { type: string, enum: [M, F, O] }
+                dateOfBirth: { type: string, format: date, example: "1990-01-15" }
+      responses:
+        '201':
+          description: User and main account created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
+                    properties:
+                      id: { type: string, format: uuid }
+                      phoneNumber: { type: string }
+                      fullName: { type: string }
+                      gender: { type: string, nullable: true }
+                      dateOfBirth: { type: string, nullable: true }
+                      kycStatus: { type: string }
+                  mainAccountId: { type: string, format: uuid }
+        '400':
+          description: Validation failed
+        '500':
+          description: Duplicate phone or server error
+
+  /v1/accounts:
+    get:
+      tags: [Accounts]
+      summary: List my accounts (pockets) with balances
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: List of accounts with balance
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accounts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, format: uuid }
+                        userId: { type: string }
+                        type: { type: string, enum: [MAIN, SAVINGS, SCHOOL_FEES, MERCHANT] }
+                        currency: { type: string }
+                        balance: { type: number }
+        '401':
+          description: Missing X-User-Id
+
+  /v1/accounts/pockets:
+    post:
+      tags: [Accounts]
+      summary: Create a pocket (savings or school_fees)
+      operationId: createPocket
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type]
+              properties:
+                type: { type: string, enum: [SAVINGS, SCHOOL_FEES] }
+      responses:
+        '201':
+          description: Pocket created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string, format: uuid }
+                  userId: { type: string }
+                  type: { type: string }
+                  currency: { type: string }
+        '401':
+          description: Missing X-User-Id
+        '400':
+          description: Validation failed or pocket type already exists
+
+  /v1/accounts/{accountId}/balance:
+    get:
+      tags: [Accounts]
+      summary: Get balance for an account
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Balance
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accountId: { type: string }
+                  balance: { type: number }
+                  currency: { type: string }
+        '401':
+          description: Missing X-User-Id
+        '404':
+          description: Account not found
+
+  /v1/transactions/cash-in:
+    post:
+      tags: [Transactions]
+      summary: Agent credits user (cash-in)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [agentCode, userPhoneNumber, amount]
+              properties:
+                agentCode: { type: string, example: "AGENT001" }
+                userPhoneNumber: { type: string, example: "250788123456" }
+                amount: { type: number, minimum: 0.01 }
+                idempotencyKey: { type: string, format: uuid, description: "Optional idempotency key" }
+      responses:
+        '201':
+          description: Cash-in completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transactionId: { type: string }
+                  accountId: { type: string }
+                  amount: { type: number }
+                  newBalance: { type: number }
+        '400':
+          description: Validation failed
+        '500':
+          description: Invalid agent, user not found, or server error
+
+  /v1/transactions/p2p:
+    post:
+      tags: [Transactions]
+      summary: P2P transfer to another user by phone
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [toPhoneNumber, amount]
+              properties:
+                toPhoneNumber: { type: string }
+                amount: { type: number, minimum: 0.01 }
+                idempotencyKey: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Transfer completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transactionId: { type: string }
+                  fromAccountId: { type: string }
+                  toAccountId: { type: string }
+                  amount: { type: number }
+        '401':
+          description: Missing X-User-Id
+        '500':
+          description: Insufficient balance, recipient not found
+
+  /v1/transactions/pocket-transfer:
+    post:
+      tags: [Transactions]
+      summary: Move money between my pockets (e.g. Main → Savings)
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fromAccountId, toAccountId, amount]
+              properties:
+                fromAccountId: { type: string, format: uuid }
+                toAccountId: { type: string, format: uuid }
+                amount: { type: number, minimum: 0.01 }
+                idempotencyKey: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Transfer completed
+        '401':
+          description: Missing X-User-Id
+        '500':
+          description: Insufficient balance or account not found
+
+  /v1/transactions/merchant:
+    post:
+      tags: [Transactions]
+      summary: Pay a merchant
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [merchantAccountId, amount]
+              properties:
+                merchantAccountId: { type: string, format: uuid }
+                amount: { type: number, minimum: 0.01 }
+                idempotencyKey: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Payment completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transactionId: { type: string }
+                  fromAccountId: { type: string }
+                  merchantAccountId: { type: string }
+                  amount: { type: number }
+                  category: { type: string }
+        '401':
+          description: Missing X-User-Id
+        '500':
+          description: Insufficient balance or merchant not found
+
+  /v1/transactions/history:
+    get:
+      tags: [Transactions]
+      summary: Transaction history (statement) for an account
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema: { type: string, format: uuid }
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string, format: uuid }
+        - name: fromDate
+          in: query
+          schema: { type: string, format: date }
+        - name: toDate
+          in: query
+          schema: { type: string, format: date }
+        - name: type
+          in: query
+          schema: { type: string, enum: [CASH_IN, P2P, POCKET_TRANSFER, MERCHANT_PAY] }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+        - name: offset
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+      responses:
+        '200':
+          description: List of transactions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accountId: { type: string }
+                  from: { type: string, nullable: true }
+                  to: { type: string, nullable: true }
+                  count: { type: integer }
+                  transactions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        transactionId: { type: string }
+                        type: { type: string }
+                        status: { type: string }
+                        amount: { type: number }
+                        currency: { type: string }
+                        createdAt: { type: string, format: date-time }
+        '401':
+          description: Missing X-User-Id
+        '400':
+          description: Validation failed
+        '500':
+          description: Account not found
+
+  /v1/merchants/onboard:
+    post:
+      tags: [Merchants]
+      summary: Onboard a merchant (create user + MERCHANT account + profile)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phoneNumber, businessName, categoryCode]
+              properties:
+                phoneNumber: { type: string, example: "250788999000" }
+                businessName: { type: string, example: "Mumo Store" }
+                categoryCode: { type: string, example: "GROCERIES" }
+      responses:
+        '201':
+          description: Merchant onboarded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId: { type: string }
+                  accountId: { type: string }
+                  merchantProfileId: { type: string }
+                  categoryCode: { type: string }
+        '400':
+          description: Validation failed
+        '500':
+          description: Category not found or user already has merchant account
