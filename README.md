@@ -75,9 +75,15 @@ cp .env.example .env
 cp .env.test.example .env.test
 # Edit if needed (default: localhost:5432, momo/momo)
 npm run db:generate
-npm run db:push
+npm run db:migrate  # Creates migration files and applies them
 npm run db:seed
 ```
+
+**Migration strategy:**
+
+- **Development:** Use `npm run db:migrate` (creates migration files in `prisma/migrations/`). Commit these files.
+- **Production:** Use `prisma migrate deploy` (applies pending migrations without prompts).
+- **Quick dev sync:** Use `npm run db:push` only for rapid prototyping (no migration files, can lose data).
 
 ### 4. Start the API
 
@@ -175,7 +181,7 @@ PostgreSQL for **dev + test** is defined under `terraform/` (Docker provider). O
 - `npm run test:unit` – run only unit tests
 - `npm run test:integration` – run only integration tests (needs DB)
 - `npm run test:watch` – run tests in watch mode
-- `npm run db:push` – push schema (no migration files)
-- `npm run db:migrate` – create and run migrations
+- `npm run db:migrate` – create and apply migrations (recommended for dev/prod)
+- `npm run db:push` – quick schema sync (dev only, no migration files)
 - `npm run db:seed` – seed categories and sample agent
 - `npm run db:studio` – open Prisma Studio
