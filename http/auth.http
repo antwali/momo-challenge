@@ -1,0 +1,26 @@
+### Variables (set these in VS Code REST Client settings or replace manually)
+@baseUrl = http://localhost:3000
+@userId = YOUR_USER_ID_HERE
+
+### Health Check
+GET {{baseUrl}}/health
+
+### Register User
+POST {{baseUrl}}/v1/auth/register
+Content-Type: application/json
+
+{
+  "phoneNumber": "250788123456",
+  "fullName": "John Doe",
+  "gender": "M",
+  "dateOfBirth": "1990-01-01"
+}
+
+### Register User (minimal)
+POST {{baseUrl}}/v1/auth/register
+Content-Type: application/json
+
+{
+  "phoneNumber": "250788654321",
+  "fullName": "Jane Smith"
+}

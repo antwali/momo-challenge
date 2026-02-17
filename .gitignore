@@ -17,3 +17,6 @@ terraform/terraform.tfstate
 terraform/terraform.tfstate.backup
 terraform/*.tfvars
 !terraform/*.tfvars.example
+
+# REST Client (uncomment if you want to ignore local env vars)
+# http/*.local.http

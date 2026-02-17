@@ -163,6 +163,18 @@ Currently a **mock**: logs to console. Replace `src/services/notification.ts` wi
 
 ![Swagger UI](docs/swagger-ui.png)
 
+## Testing endpoints (REST Client)
+
+**VS Code REST Client files** are available in `http/` for testing endpoints directly from the editor:
+
+1. Install the **REST Client** extension in VS Code
+2. Start the API: `npm run dev`
+3. Open any `.http` file (e.g., `http/auth.http`)
+4. Click "Send Request" above each endpoint
+5. Update variables (`@userId`, `@accountId`, etc.) with real values from responses
+
+See `http/README.md` for details. No Postman or curl needed!
+
 ## Terraform
 
 PostgreSQL for **dev + test** is defined under `terraform/` (Docker provider). One container exposes both databases (`momo_wallet`, `momo_wallet_test`).

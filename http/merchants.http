@@ -1,0 +1,43 @@
+### Variables
+@baseUrl = http://localhost:3000
+@phoneNumber = 250788123456
+
+### Merchant Onboarding
+POST {{baseUrl}}/v1/merchants/onboard
+Content-Type: application/json
+
+{
+  "phoneNumber": "{{phoneNumber}}",
+  "businessName": "My Grocery Store",
+  "categoryCode": "GROCERIES"
+}
+
+### Merchant Onboarding (Fuel)
+POST {{baseUrl}}/v1/merchants/onboard
+Content-Type: application/json
+
+{
+  "phoneNumber": "{{phoneNumber}}",
+  "businessName": "Gas Station",
+  "categoryCode": "FUEL"
+}
+
+### Merchant Onboarding (Clothes)
+POST {{baseUrl}}/v1/merchants/onboard
+Content-Type: application/json
+
+{
+  "phoneNumber": "{{phoneNumber}}",
+  "businessName": "Fashion Boutique",
+  "categoryCode": "CLOTHES"
+}
+
+### Merchant Onboarding (Utilities)
+POST {{baseUrl}}/v1/merchants/onboard
+Content-Type: application/json
+
+{
+  "phoneNumber": "{{phoneNumber}}",
+  "businessName": "Power Company",
+  "categoryCode": "UTILITIES"
+}

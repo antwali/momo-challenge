@@ -1,0 +1,33 @@
+### Variables
+@baseUrl = http://localhost:3000
+@userId = YOUR_USER_ID_HERE
+@accountId = YOUR_ACCOUNT_ID_HERE
+
+### List Accounts (requires X-User-Id)
+GET {{baseUrl}}/v1/accounts
+X-User-Id: {{userId}}
+
+### Create Savings Pocket
+POST {{baseUrl}}/v1/accounts/pockets
+Content-Type: application/json
+X-User-Id: {{userId}}
+
+{
+  "type": "SAVINGS"
+}
+
+### Create School Fees Pocket
+POST {{baseUrl}}/v1/accounts/pockets
+Content-Type: application/json
+X-User-Id: {{userId}}
+
+{
+  "type": "SCHOOL_FEES"
+}
+
+### Get Account Balance
+GET {{baseUrl}}/v1/accounts/{{accountId}}/balance
+X-User-Id: {{userId}}
+
+### Get Account Balance (without auth - should fail)
+GET {{baseUrl}}/v1/accounts/{{accountId}}/balance

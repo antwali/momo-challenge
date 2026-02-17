@@ -1,0 +1,84 @@
+### Variables
+@baseUrl = http://localhost:3000
+@userId = YOUR_USER_ID_HERE
+@userPhone = 250788123456
+@toPhone = 250788654321
+@accountId = YOUR_ACCOUNT_ID_HERE
+@merchantAccountId = YOUR_MERCHANT_ACCOUNT_ID_HERE
+@fromAccountId = YOUR_FROM_ACCOUNT_ID_HERE
+@toAccountId = YOUR_TO_ACCOUNT_ID_HERE
+
+### Cash In
+POST {{baseUrl}}/v1/transactions/cash-in
+Content-Type: application/json
+
+{
+  "agentCode": "AGENT001",
+  "userPhoneNumber": "{{userPhone}}",
+  "amount": 10000
+}
+
+### Cash In (with idempotency key)
+POST {{baseUrl}}/v1/transactions/cash-in
+Content-Type: application/json
+
+{
+  "agentCode": "AGENT001",
+  "userPhoneNumber": "{{userPhone}}",
+  "amount": 5000,
+  "idempotencyKey": "550e8400-e29b-41d4-a716-446655440000"
+}
+
+### P2P Transfer
+POST {{baseUrl}}/v1/transactions/p2p
+Content-Type: application/json
+X-User-Id: {{userId}}
+
+{
+  "toPhoneNumber": "{{toPhone}}",
+  "amount": 1000
+}
+
+### P2P Transfer (with idempotency)
+POST {{baseUrl}}/v1/transactions/p2p
+Content-Type: application/json
+X-User-Id: {{userId}}
+
+{
+  "toPhoneNumber": "{{toPhone}}",
+  "amount": 500,
+  "idempotencyKey": "550e8400-e29b-41d4-a716-446655440001"
+}
+
+### Pocket Transfer
+POST {{baseUrl}}/v1/transactions/pocket-transfer
+Content-Type: application/json
+X-User-Id: {{userId}}
+
+{
+  "fromAccountId": "{{fromAccountId}}",
+  "toAccountId": "{{toAccountId}}",
+  "amount": 2000
+}
+
+### Merchant Pay
+POST {{baseUrl}}/v1/transactions/merchant
+Content-Type: application/json
+X-User-Id: {{userId}}
+
+{
+  "merchantAccountId": "{{merchantAccountId}}",
+  "amount": 1500
+}
+
+### Transaction History
+GET {{baseUrl}}/v1/transactions/history?accountId={{accountId}}
+X-User-Id: {{userId}}
+
+### Transaction History (with filters)
+GET {{baseUrl}}/v1/transactions/history?accountId={{accountId}}&type=CASH_IN&limit=10&offset=0
+X-User-Id: {{userId}}
+
+### Transaction History (date range)
+GET {{baseUrl}}/v1/transactions/history?accountId={{accountId}}&fromDate=2024-01-01&toDate=2024-12-31
+X-User-Id: {{userId}}
